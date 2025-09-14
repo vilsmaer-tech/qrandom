@@ -6,7 +6,7 @@ qrandom is a Python package that provides access to true random numbers generate
     Core module (qrandom) – Handles API calls to fetch random integers, floats, and arrays.
     Setup files (setup.py, pyproject.toml) – Standard packaging configuration.
     Documentation (README.md) – Explains installation, usage, and links to the ANU QRNG service.
-    Tests (tests/) – Unit tests verifying correct API interaction and random number formatting.
+    Tests (tests/) – Unit tests verifying correct API interaction and random number formatting. TO DO LATER
 
 ⚙️ Main Features
 
