@@ -50,7 +50,10 @@ def os_urandom_flip(n):
 
 # --- Статистические метрики ---
 def calculate_stats(flips):
-    """Вычисляет основные статистики"""
+    """Вычисляет статистики по массиву бросков (0=орёл, 1=решка)"""
+    if len(flips) == 0:
+        raise ValueError("Cannot calculate stats on empty list")
+
     flips = np.array(flips)
     mean = np.mean(flips)
     std = np.std(flips)
@@ -65,20 +68,30 @@ def calculate_stats(flips):
     }
 
 def calculate_autocorrelation(flips, max_lag=10):
-    """Ручная реализация автокорреляции без acorr_ljungbox"""
+    """Рассчитывает автокорреляцию для бинарной последовательности (0/1)"""
     if len(flips) < max_lag + 1:
-        return [0.0] * max_lag, [1.0] * max_lag  # p-values = 1.0 (не значимы)
-    
+        return [0.0] * max_lag, [1.0] * max_lag
+
     flips = np.array(flips, dtype=float)
+    mean = np.mean(flips)
+    var = np.var(flips)
+
+    if var == 0:  # все элементы одинаковые
+        return [0.0] * max_lag, [1.0] * max_lag
+
     autocorr_vals = []
     for lag in range(1, max_lag + 1):
-        corr = np.corrcoef(flips[:-lag], flips[lag:])[0, 1]
-        autocorr_vals.append(abs(corr) if not np.isnan(corr) else 0.0)
-    
-    # Простой тест: считаем, что p-value > 0.05, если |r| < 0.2 (приближенный)
-    # Для точного теста нужен Ljung-Box — но если его нет — это приемлемая замена
-    pvals = [1.0 if abs(r) < 0.2 else 0.01 for r in autocorr_vals]  # грубая оценка
-    
+        # Сдвигаем массив на lag
+        x1 = flips[:-lag]
+        x2 = flips[lag:]
+        # Считаем ковариацию
+        cov = np.mean((x1 - mean) * (x2 - mean))
+        r = cov / var  # нормализуем
+        autocorr_vals.append(r)
+
+    # Простая оценка p-value: если |r| > 0.3 — значимо (грубая оценка)
+    pvals = [1.0 if abs(r) < 0.3 else 0.01 for r in autocorr_vals]
+
     return autocorr_vals, pvals
 
 def calculate_histogram(flips):
@@ -363,3 +376,4 @@ print("• `random` — самый медленный и слабый по ав�
 print("• 🔒 Для криптографии: используйте ТОЛЬКО `secrets` или `os.urandom`.")
 print("• 📊 Для симуляций: `numpy.random` — идеален.")
 print("• ⚠️ Избегайте `random` в серьёзных проектах — он устарел и медленный.")
+# 1) unitest
